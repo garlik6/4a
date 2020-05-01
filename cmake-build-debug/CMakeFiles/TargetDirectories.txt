@@ -1,0 +1,3 @@
+C:/Users/Grigory/CLionProjects/4a/cmake-build-debug/CMakeFiles/untitled17.dir
+C:/Users/Grigory/CLionProjects/4a/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Grigory/CLionProjects/4a/cmake-build-debug/CMakeFiles/rebuild_cache.dir
