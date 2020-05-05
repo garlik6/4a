@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
-#define SIZE 10000
+#define SIZE 10
 
 typedef  struct item {
     int busy;
@@ -120,39 +120,42 @@ int add(table *pTab)
     char *info = NULL;
     int par;
     printf("Enter key: -->");
-    n = getIntSmall(&k,1);
+    n = getIntSmall(&k,2);
     if(n == 0)
         return 0; // обнаружен конец файла
     printf("Enter parent element: -->");
-    par = pTab->first[getIntSmallPar(n,pTab->n)].key;
-    if(pTab->n > 0)
-        while (search(*pTab,par) == -1)
-            par = pTab->first[getIntSmallPar(n,pTab->n)].key;
+    par = getIntSmall(&n,2);
     printf("Enter info:\n");
     info = getstring();
     if(info == NULL)
         return 0;
-    rc = insert(pTab, k, par, info);
+    rc = insert(pTab, k, n, info);
     free(info);
-
     printf("%s: %d\n", errorMessages[rc], k);
     return 1;
 }
-int getIntSmallPar(int q, int n) {
-    srand(rand()*time(0));
-    printf("%s\n", "random");
-    if(n != 0)
-        q = rand() % n;
-    else
-        q = 0;
-    return q;
-}
+//int getIntSmallPar(int q, int n) {
+//    srand(rand()*time(0));
+//    printf("%s\n", "random");
+//    if(n != 0)
+//        q = rand() % n;
+//    else
+//        q = 0;
+//    return q;
+//}
 
 int insert(table *pTable, int k, int par, char *info) {
     int rc;
     int i= search(*pTable, k);
-    int j = search(*pTable, par);
-    if (i>=0)
+     int j = 0;
+    if (par != 0) {
+         j = search(*pTable, par);
+    }
+    if (pTable->n == 0) {
+        par = 0;
+        j = 0;
+    }
+    if (i >= 0)
         return 1;
     if (j == -1 && par != 0)
         return 3;
@@ -165,8 +168,7 @@ int insert(table *pTable, int k, int par, char *info) {
 
     pTable->first[pTable->n].key = k;
     pTable->first[pTable->n].par = par;
-    if(pTable->first[pTable->n].info == NULL)
-        pTable->first[pTable->n].info = (char *) calloc(strlen(info) + 1,1);
+    pTable->first[pTable->n].info = (char *) calloc(strlen(info) + 1,1);
     pTable->first[pTable->n].busy = 1;
     *pTable->first[pTable->n].info='\0';
     strcat(pTable->first[pTable->n].info,info);
@@ -204,19 +206,20 @@ int search(table table, int k) {
 
 int findFamily (table* pTable){
     int k, rc, *children [SIZE];
-    int buf;
+    int buf, bufPar;
     printf("Enter key: -->");
     table family = {0};
     getIntSmall(&k,2);
     rc = searchChildren(pTable, k, children);
-    if (rc == -1)
+    if (rc == -1 || rc == 0)
         printf("Not found");
     else {
-        buf = search(*pTable, k);
-        insert(&family, pTable->first[buf].key, pTable->first[buf].par, pTable->first[buf].info);
+       buf = search(*pTable, k);
+       insert(&family, pTable->first[buf].key, pTable->first[buf].par, pTable->first[buf].info);
         for (int i = 0; i < rc; i++) {
             buf = search(*pTable, *children[i]);
-            insert(&family, *children[i], pTable->first[buf].par, pTable->first[buf].info);
+            bufPar = pTable->first[buf].par;
+            insert(&family, *children[i], bufPar, pTable->first[buf].info);
         }
         show(&family);
         delTable(&family);
@@ -244,6 +247,7 @@ int erase(table *pTable,int k){
         return -1;
     else {
         pTable->first[rc].busy = 0;
+        free(pTable->first[rc].info);
         return rc;
     }
 
@@ -271,7 +275,7 @@ int deleteFamily(table * pTable)
 }
 
 int eraseFamily(table* pTable,int k) //рекурсивно вырезает семью
-{  int *children[SIZE];
+{  int *children[SIZE-(pTable->n-search(*pTable,k))];
     int n;
     if (search(*pTable,k) == -1)
         return -1;
@@ -311,4 +315,7 @@ int main() {
 }
 
 void delTable(table *pTable) {
+    for (int i = 0; i < SIZE; i++) {
+        free(pTable->first[i].info);
+    }
 }
